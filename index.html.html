@@ -1,0 +1,837 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Personal — Finance Dashboard</title>
+  <style>
+    :root{
+      --bg-start:#1b1036;
+      --bg-end:#0b0b15;
+      --card-bg:rgba(255,255,255,0.08);
+      --card-border:rgba(255,255,255,0.14);
+      --text:#ffffff;
+      --muted:#c8c8d9;
+      --accent-pink:#ff4fb1;
+      --accent-green:#34d399;
+      --accent-blue:#6ee7ff;
+      --warning:#ff7b72;
+      --shadow:0 20px 40px rgba(0,0,0,0.35);
+      --radius:16px;
+      --radius-sm:12px;
+      --radius-xs:10px;
+      --focus:#8b5cf6;
+      --focus-glow:0 0 0 3px rgba(139,92,246,0.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      color:var(--text);
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;
+      background:radial-gradient(1200px 700px at 10% 0%, #2b1f5e 0%, #1b1036 25%, #0b0b15 100%),
+                 linear-gradient(180deg, var(--bg-start) 0%, var(--bg-end) 100%);
+      background-attachment:fixed;
+    }
+    .container{
+      max-width:1200px;
+      margin:0 auto;
+      padding:24px;
+    }
+    header{
+      display:grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items:center;
+      gap:16px;
+    }
+    .brand{
+      display:flex;align-items:center;gap:12px;
+    }
+    .logo{
+      width:38px;height:38px;border-radius:50%;
+      background:conic-gradient(from 210deg, var(--accent-pink), var(--accent-blue), var(--accent-green), var(--accent-pink));
+      box-shadow:0 6px 18px rgba(255,79,177,0.35);
+    }
+    .title{
+      font-weight:800;letter-spacing:0.4px;font-size:18px;
+    }
+    .search{
+      display:flex;align-items:center;gap:8px;
+      background:var(--card-bg);
+      border:1px solid var(--card-border);
+      backdrop-filter:saturate(130%) blur(12px);
+      padding:10px 14px;border-radius:999px;
+      box-shadow:var(--shadow);
+    }
+    .search input{
+      flex:1;background:transparent;border:0;outline:none;color:var(--text);
+      font-size:14px;
+    }
+    nav{
+      display:flex;justify-content:flex-end;align-items:center;gap:12px;
+    }
+    .nav-btn{
+      padding:10px 14px;border-radius:999px;border:1px solid var(--card-border);
+      background:var(--card-bg);color:var(--muted);cursor:pointer;
+      transition:transform .2s ease, box-shadow .2s ease, color .2s ease;
+    }
+    .nav-btn:hover{transform:translateY(-1px);color:var(--text);box-shadow:0 8px 24px rgba(0,0,0,.35)}
+    .avatar{
+      width:36px;height:36px;border-radius:50%;
+      background:radial-gradient(140px 80px at 40% 30%, #3b82f6 0%, #a855f7 60%, #ec4899 100%);
+      border:1px solid var(--card-border);
+    }
+    main{
+      margin-top:20px;
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap:20px;
+    }
+    @media (max-width:960px){
+      main{grid-template-columns:1fr}
+    }
+    .card{
+      background:var(--card-bg);
+      border:1px solid var(--card-border);
+      backdrop-filter:saturate(140%) blur(14px);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+    .card.header-card{display:flex;align-items:center;justify-content:space-between;padding:18px}
+    .pill{
+      padding:8px 12px;border-radius:999px;font-size:12px;color:var(--muted);
+      border:1px solid var(--card-border);background:rgba(255,255,255,0.06)
+    }
+    .grid{
+      display:grid;gap:16px;
+    }
+    .balance-card{padding:18px}
+    .balance-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+    .balance-amount{font-size:28px;font-weight:800;color:var(--accent-pink);letter-spacing:.3px}
+    .sub-row{display:flex;gap:14px;margin-top:8px}
+    .sub-pill{
+      display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;
+      border:1px solid var(--card-border);background:rgba(255,255,255,0.06);color:var(--muted);font-size:12px;
+    }
+    .dot{width:8px;height:8px;border-radius:50%}
+    .dot.income{background:var(--accent-green)}
+    .dot.expense{background:var(--warning)}
+    .chart-card{padding:16px}
+    canvas{width:100%;height:220px;display:block}
+    .trans-type-card{padding:16px}
+    .type-row{display:flex;gap:10px}
+    .type-btn{
+      flex:1;padding:12px;border-radius:var(--radius-sm);border:1px solid var(--card-border);
+      background:rgba(255,255,255,0.06);color:var(--muted);cursor:pointer;transition:all .2s ease;
+      display:flex;align-items:center;gap:10px;justify-content:center
+    }
+    .type-btn.active{color:#0b0b15;background:linear-gradient(180deg,#ffffff 0%,#eaeaea 100%);border-color:transparent}
+    .type-icon{width:10px;height:10px;border-radius:50%}
+    .type-icon.income{background:var(--accent-green)}
+    .type-icon.expense{background:var(--warning)}
+    .type-icon.transfer{background:var(--accent-blue)}
+    .form-card{padding:16px}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media (max-width:700px){.form-grid{grid-template-columns:1fr}}
+    label{font-size:12px;color:var(--muted);margin-bottom:6px;display:block}
+    .input, select, textarea{
+      width:100%;padding:10px 12px;border-radius:var(--radius-xs);
+      border:1px solid var(--card-border);background:rgba(255,255,255,0.06);
+      color:var(--text);outline:none;transition:box-shadow .15s ease,border-color .15s ease;
+    }
+    .input:focus, select:focus, textarea:focus{border-color:var(--focus);box-shadow:var(--focus-glow)}
+    .row{display:flex;gap:10px}
+    .addon-btn{
+      white-space:nowrap;padding:10px 12px;border-radius:var(--radius-xs);
+      border:1px dashed var(--card-border);background:rgba(255,255,255,0.04);color:var(--muted);
+      cursor:pointer;transition:all .2s ease
+    }
+    .addon-btn:hover{color:var(--text);border-style:solid}
+    .primary{
+      display:inline-flex;align-items:center;gap:10px;
+      padding:12px 16px;border-radius:999px;border:0;
+      background:linear-gradient(90deg,var(--accent-pink), #a855f7 50%, var(--accent-blue));
+      color:#0b0b15;font-weight:700;cursor:pointer;transition:transform .15s ease, box-shadow .15s ease;
+      box-shadow:0 10px 24px rgba(168,85,247,.25)
+    }
+    .primary:hover{transform:translateY(-1px);box-shadow:0 14px 32px rgba(168,85,247,.35)}
+    .list-card{padding:16px}
+    .list-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+    .table{width:100%;border-collapse:collapse}
+    .table th,.table td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.08);text-align:left;font-size:13px}
+    .table th{color:var(--muted);font-weight:600}
+    .badge{padding:4px 8px;border-radius:999px;font-size:11px;border:1px solid var(--card-border)}
+    .badge.income{color:var(--accent-green);border-color:rgba(52,211,153,0.35)}
+    .badge.expense{color:var(--warning);border-color:rgba(255,123,114,0.35)}
+    .badge.transfer{color:var(--accent-blue);border-color:rgba(110,231,255,0.35)}
+    .settings-modal{
+      position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:24px;
+      background:rgba(0,0,0,0.45);backdrop-filter:blur(4px)
+    }
+    .settings-modal.open{display:flex}
+    .settings-panel{max-width:520px;width:100%}
+    .settings-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:12px}
+    .lang-toggle{padding:10px 14px;border:1px solid var(--card-border);border-radius:999px;background:var(--card-bg);color:var(--muted);cursor:pointer}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+    /* subtle separators */
+    .section-title{font-size:14px;color:var(--muted);margin-bottom:8px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="card header-card" aria-label="Top navigation">
+      <div class="brand">
+          <div class="logo" aria-hidden="true"><img src="https://i.postimg.cc/1Xk9bjC2/Copilot-20250921-112342.png" alt="logo" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:1px solid rgba(255,255,255,0.12)"></div>
+          <div class="title" id="appName">Personal</div>
+          <span class="pill" id="appTag">Finance dashboard</span>
+        </div>
+      <div class="search" role="search">
+        <svg width="16" height="16" fill="#c8c8d9" aria-hidden="true" viewBox="0 0 24 24"><path d="M10 4a6 6 0 104.472 10.06l4.334 4.334 1.414-1.414-4.334-4.334A6 6 0 0010 4zm0 2a4 4 0 110 8 4 4 0 010-8z"></path></svg>
+        <input id="globalSearch" type="search" placeholder="Search..." aria-label="Global search"/>
+      </div>
+      <nav>
+        <button class="nav-btn" id="dashboardBtn">Dashboard</button>
+        <button class="nav-btn" id="settingsBtn">Settings</button>
+          <button class="nav-btn" id="clearDemoBtn" title="Clear seeded demo data">Clear demo</button>
+        <div class="avatar" aria-hidden="true"></div>
+      </nav>
+    </header>
+
+    <main>
+      <section class="grid">
+        <div class="card balance-card" aria-label="Balance overview">
+          <div class="balance-head">
+            <div>
+              <div class="section-title" id="balanceLabel">Balance</div>
+              <div class="balance-amount" id="balanceValue">$0</div>
+            </div>
+            <div class="sub-row">
+              <div class="sub-pill"><span class="dot income"></span><span id="incomeLabel">Income</span>: <strong id="incomeValue">$0</strong></div>
+              <div class="sub-pill"><span class="dot expense"></span><span id="expenseLabel">Expense</span>: <strong id="expenseValue">$0</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card chart-card" aria-label="Weekly chart">
+          <div class="section-title" id="chartTitle">Weekly income vs expense</div>
+          <canvas id="chartCanvas" aria-label="Weekly bar chart"></canvas>
+        </div>
+
+        <div class="card list-card" aria-label="Transactions list">
+          <div class="list-head">
+            <div class="section-title" id="listTitle">Recent transactions</div>
+            <button class="lang-toggle" id="langToggle" aria-label="Toggle language">বাংলা / English</button>
+          </div>
+          <table class="table" id="txTable">
+            <thead>
+              <tr>
+                <th id="thDate">Date</th>
+                <th id="thType">Type</th>
+                <th id="thAccount">Account</th>
+                <th id="thCategory">Category</th>
+                <th id="thAmount">Amount</th>
+                <th id="thNote">Note</th>
+              </tr>
+            </thead>
+            <tbody id="txBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <aside class="grid">
+        <div class="card trans-type-card" aria-label="Transaction type">
+          <div class="section-title" id="typeTitle">Transaction type</div>
+          <div class="type-row" role="tablist" aria-label="Type selector">
+            <button class="type-btn active" data-type="income" role="tab" aria-selected="true" id="typeIncome">
+              <span class="type-icon income"></span><span id="typeIncomeLabel">Income</span>
+            </button>
+            <button class="type-btn" data-type="expense" role="tab" aria-selected="false" id="typeExpense">
+              <span class="type-icon expense"></span><span id="typeExpenseLabel">Expense</span>
+            </button>
+            <button class="type-btn" data-type="transfer" role="tab" aria-selected="false" id="typeTransfer">
+              <span class="type-icon transfer"></span><span id="typeTransferLabel">Transfer</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="card form-card" aria-label="Add transaction">
+          <div class="section-title" id="formTitle">Add transaction</div>
+          <div class="form-grid">
+            <div>
+              <label for="accountSelect" id="accountLabel">Account</label>
+              <div class="row">
+                <select id="accountSelect" aria-label="Select account"></select>
+                <button class="addon-btn" id="addAccountBtn">+ Add</button>
+              </div>
+            </div>
+            <div>
+              <label for="categorySelect" id="categoryLabel">Category</label>
+              <div class="row">
+                <select id="categorySelect" aria-label="Select category"></select>
+                <button class="addon-btn" id="addCategoryBtn">+ Add</button>
+              </div>
+            </div>
+            <div>
+              <label for="amountInput" id="amountLabel">Amount</label>
+              <input id="amountInput" class="input" type="number" step="0.01" min="0" placeholder="0.00" aria-label="Amount"/>
+            </div>
+            <div>
+              <label for="dateInput" id="dateLabel">Date</label>
+              <input id="dateInput" class="input" type="date" aria-label="Date"/>
+            </div>
+            <div style="grid-column:1/-1">
+              <label for="noteInput" id="noteLabel">Note</label>
+              <input id="noteInput" class="input" type="text" placeholder="Optional note" aria-label="Note"/>
+            </div>
+            <div style="grid-column:1/-1;display:flex;justify-content:flex-end">
+              <button class="primary" id="addTxBtn" aria-label="Add transaction">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="#0b0b15" aria-hidden="true"><path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>
+                <span id="addTxLabel">Add transaction</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="settings-modal" id="settingsModal" aria-hidden="true" role="dialog" aria-label="Settings">
+    <div class="card settings-panel">
+      <div class="balance-head">
+        <div class="section-title" id="settingsTitle">Settings</div>
+        <button class="nav-btn" id="closeSettingsBtn">Close</button>
+      </div>
+      <div class="form-grid" style="padding:16px">
+        <div>
+          <label id="currencyLabel" for="currencyInput">Currency symbol</label>
+          <input id="currencyInput" class="input" type="text" maxlength="4" placeholder="$"/>
+        </div>
+        <div>
+          <label id="startBalanceLabel" for="startBalanceInput">Starting balance</label>
+          <input id="startBalanceInput" class="input" type="number" step="0.01" min="0" placeholder="0"/>
+        </div>
+        <div style="grid-column:1/-1">
+          <label id="resetDataLabel">Data</label>
+          <div class="row">
+            <button class="addon-btn" id="seedDataBtn">Seed demo data</button>
+            <button class="addon-btn" id="resetDataBtn">Reset all</button>
+          </div>
+        </div>
+        <div style="grid-column:1/-1" class="settings-actions">
+          <button class="primary" id="saveSettingsBtn">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // State & persistence
+    const storeKey = 'tp_finance_state_v1';
+    const defaultState = {
+      lang: 'en',
+      currency: '$',
+      startBalance: 0,
+      accounts: ['Cash','Bank','Mobile Money'],
+      categories: {
+        income: ['Salary','Freelance','Gift'],
+        expense: ['Food','Transport','Bills'],
+        transfer: ['To Savings','From Savings']
+      },
+      transactions: [] // {id,type,account,category,amount,date,note}
+    };
+    let state = loadState();
+
+    function loadState(){
+      try{
+        const raw = localStorage.getItem(storeKey);
+        return raw ? JSON.parse(raw) : {...defaultState};
+      }catch(e){ return {...defaultState}; }
+    }
+    function saveState(){ localStorage.setItem(storeKey, JSON.stringify(state)); }
+
+    // i18n
+    const t = {
+      en: {
+        appTag:'Finance dashboard',
+        search:'Search...',
+        balance:'Balance',
+        income:'Income',
+        expense:'Expense',
+        chartTitle:'Weekly income vs expense',
+        listTitle:'Recent transactions',
+        typeTitle:'Transaction type',
+        incomeType:'Income',
+        expenseType:'Expense',
+        transferType:'Transfer',
+        formTitle:'Add transaction',
+        account:'Account',
+        category:'Category',
+        amount:'Amount',
+        date:'Date',
+        note:'Note',
+        addTransaction:'Add transaction',
+        dashboard:'Dashboard',
+        settings:'Settings',
+        modalTitle:'Settings',
+        close:'Close',
+        currency:'Currency symbol',
+        startBalance:'Starting balance',
+        data:'Data',
+        seedDemo:'Seed demo data',
+        resetAll:'Reset all',
+        save:'Save',
+        table: {date:'Date', type:'Type', account:'Account', category:'Category', amount:'Amount', note:'Note'}
+      },
+      bn: {
+        appTag:'ফাইন্যান্স ড্যাশবোর্ড',
+        search:'খুঁজুন...',
+        balance:'ব্যালেন্স',
+        income:'আয়',
+        expense:'খরচ',
+        chartTitle:'সাপ্তাহিক আয় বনাম খরচ',
+        listTitle:'সাম্প্রতিক ট্রান্স্যাকশন',
+        typeTitle:'ট্রান্স্যাকশন টাইপ',
+        incomeType:'আয়',
+        expenseType:'খরচ',
+        transferType:'ট্রান্সফার',
+        formTitle:'ট্রান্স্যাকশন যোগ করুন',
+        account:'অ্যাকাউন্ট',
+        category:'ক্যাটাগরি',
+        amount:'টাকা',
+        date:'তারিখ',
+        note:'নোট',
+        addTransaction:'ট্রান্স্যাকশন যোগ করুন',
+        dashboard:'ড্যাশবোর্ড',
+        settings:'সেটিংস',
+        modalTitle:'সেটিংস',
+        close:'বন্ধ করুন',
+        currency:'কারেন্সি সিম্বল',
+        startBalance:'শুরু ব্যালেন্স',
+        data:'ডাটা',
+        seedDemo:'ডেমো ডাটা',
+        resetAll:'রিসেট',
+        save:'সেভ',
+        table: {date:'তারিখ', type:'টাইপ', account:'অ্যাকাউন্ট', category:'ক্যাটাগরি', amount:'টাকা', note:'নোট'}
+      }
+    };
+
+    // Elements
+    const el = {
+      appTag: document.getElementById('appTag'),
+      globalSearch: document.getElementById('globalSearch'),
+      balanceLabel: document.getElementById('balanceLabel'),
+      balanceValue: document.getElementById('balanceValue'),
+      incomeLabel: document.getElementById('incomeLabel'),
+      incomeValue: document.getElementById('incomeValue'),
+      expenseLabel: document.getElementById('expenseLabel'),
+      expenseValue: document.getElementById('expenseValue'),
+      chartTitle: document.getElementById('chartTitle'),
+      chartCanvas: document.getElementById('chartCanvas'),
+      listTitle: document.getElementById('listTitle'),
+      langToggle: document.getElementById('langToggle'),
+      txBody: document.getElementById('txBody'),
+      thDate: document.getElementById('thDate'),
+      thType: document.getElementById('thType'),
+      thAccount: document.getElementById('thAccount'),
+      thCategory: document.getElementById('thCategory'),
+      thAmount: document.getElementById('thAmount'),
+      thNote: document.getElementById('thNote'),
+      typeIncome: document.getElementById('typeIncome'),
+      typeExpense: document.getElementById('typeExpense'),
+      typeTransfer: document.getElementById('typeTransfer'),
+      typeIncomeLabel: document.getElementById('typeIncomeLabel'),
+      typeExpenseLabel: document.getElementById('typeExpenseLabel'),
+      typeTransferLabel: document.getElementById('typeTransferLabel'),
+      typeButtons: document.querySelectorAll('.type-btn'),
+      formTitle: document.getElementById('formTitle'),
+      accountLabel: document.getElementById('accountLabel'),
+      accountSelect: document.getElementById('accountSelect'),
+      addAccountBtn: document.getElementById('addAccountBtn'),
+      categoryLabel: document.getElementById('categoryLabel'),
+      categorySelect: document.getElementById('categorySelect'),
+      addCategoryBtn: document.getElementById('addCategoryBtn'),
+      amountLabel: document.getElementById('amountLabel'),
+      amountInput: document.getElementById('amountInput'),
+      dateLabel: document.getElementById('dateLabel'),
+      dateInput: document.getElementById('dateInput'),
+      noteLabel: document.getElementById('noteLabel'),
+      noteInput: document.getElementById('noteInput'),
+      addTxBtn: document.getElementById('addTxBtn'),
+      addTxLabel: document.getElementById('addTxLabel'),
+      dashboardBtn: document.getElementById('dashboardBtn'),
+  settingsBtn: document.getElementById('settingsBtn'),
+  clearDemoBtn: document.getElementById('clearDemoBtn'),
+  settingsModal: document.getElementById('settingsModal'),
+      closeSettingsBtn: document.getElementById('closeSettingsBtn'),
+      settingsTitle: document.getElementById('settingsTitle'),
+      currencyLabel: document.getElementById('currencyLabel'),
+      currencyInput: document.getElementById('currencyInput'),
+      startBalanceLabel: document.getElementById('startBalanceLabel'),
+      startBalanceInput: document.getElementById('startBalanceInput'),
+      resetDataLabel: document.getElementById('resetDataLabel'),
+      seedDataBtn: document.getElementById('seedDataBtn'),
+      resetDataBtn: document.getElementById('resetDataBtn'),
+      saveSettingsBtn: document.getElementById('saveSettingsBtn'),
+      appName: document.getElementById('appName')
+    };
+
+    // Current type
+    let currentType = 'income';
+
+    // Init
+    init();
+
+    function init(){
+      // Apply language
+      applyLanguage();
+      // Populate selects
+      populateAccounts();
+      populateCategories();
+      // Defaults
+      el.currencyInput.value = state.currency;
+      el.startBalanceInput.value = state.startBalance || 0;
+      el.dateInput.valueAsDate = new Date();
+      // Seed demo if first run with empty transactions, unless user cleared demo data earlier
+      const demoCleared = localStorage.getItem('tp_finance_demo_cleared') === 'true';
+      if(!demoCleared && state.transactions.length === 0 && state.startBalance === 0){
+        seedDemoData();
+      }
+      renderAll();
+      // Events
+      wireEvents();
+    }
+
+    function applyLanguage(){
+      const L = t[state.lang];
+      el.appTag.textContent = L.appTag;
+      el.globalSearch.placeholder = L.search;
+      el.balanceLabel.textContent = L.balance;
+      el.incomeLabel.textContent = L.income;
+      el.expenseLabel.textContent = L.expense;
+      el.chartTitle.textContent = L.chartTitle;
+      el.listTitle.textContent = L.listTitle;
+      el.typeIncomeLabel.textContent = L.incomeType;
+      el.typeExpenseLabel.textContent = L.expenseType;
+      el.typeTransferLabel.textContent = L.transferType;
+      el.formTitle.textContent = L.formTitle;
+      el.accountLabel.textContent = L.account;
+      el.categoryLabel.textContent = L.category;
+      el.amountLabel.textContent = L.amount;
+      el.dateLabel.textContent = L.date;
+      el.noteLabel.textContent = L.note;
+      el.addTxLabel.textContent = L.addTransaction;
+      el.dashboardBtn.textContent = L.dashboard;
+      el.settingsBtn.textContent = L.settings;
+      el.settingsTitle.textContent = L.modalTitle;
+      el.closeSettingsBtn.textContent = L.close;
+      el.currencyLabel.textContent = L.currency;
+      el.startBalanceLabel.textContent = L.startBalance;
+      el.resetDataLabel.textContent = L.data;
+      el.seedDataBtn.textContent = L.seedDemo;
+      el.resetDataBtn.textContent = L.resetAll;
+      el.saveSettingsBtn.textContent = L.save;
+      el.thDate.textContent = L.table.date;
+      el.thType.textContent = L.table.type;
+      el.thAccount.textContent = L.table.account;
+      el.thCategory.textContent = L.table.category;
+      el.thAmount.textContent = L.table.amount;
+      el.thNote.textContent = L.table.note;
+      el.appName.textContent = state.lang==='bn' ? 'পার্সোনাল ' : 'Personal';
+    }
+
+    function wireEvents(){
+      // Type selector
+      el.typeButtons.forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          el.typeButtons.forEach(b=>{
+            b.classList.remove('active');
+            b.setAttribute('aria-selected','false');
+          });
+          btn.classList.add('active');
+          btn.setAttribute('aria-selected','true');
+          currentType = btn.dataset.type;
+          populateCategories(); // update categories per type
+        });
+      });
+
+      // Add account
+      el.addAccountBtn.addEventListener('click', ()=>{
+        const name = prompt(state.lang==='bn' ? 'নতুন অ্যাকাউন্টের নাম দিন' : 'Enter new account name');
+        if(name && name.trim()){
+          state.accounts.push(name.trim());
+          saveState(); populateAccounts();
+          el.accountSelect.value = name.trim();
+        }
+      });
+
+      // Add category (per type)
+      el.addCategoryBtn.addEventListener('click', ()=>{
+        const name = prompt(state.lang==='bn' ? 'নতুন ক্যাটাগরি যোগ করুন' : 'Add new category');
+        if(name && name.trim()){
+          state.categories[currentType].push(name.trim());
+          saveState(); populateCategories();
+          el.categorySelect.value = name.trim();
+        }
+      });
+
+      // Add transaction
+      el.addTxBtn.addEventListener('click', ()=>{
+        const amount = parseFloat(el.amountInput.value);
+        const date = el.dateInput.value || new Date().toISOString().slice(0,10);
+        const account = el.accountSelect.value;
+        const category = el.categorySelect.value;
+        const note = el.noteInput.value.trim();
+
+        if(!account || !category || isNaN(amount) || amount <= 0){
+          alert(state.lang==='bn' ? 'সঠিক ইনপুট দিন (অ্যাকাউন্ট, ক্যাটাগরি, টাকা)' : 'Please provide valid inputs (account, category, amount).');
+          return;
+        }
+        const tx = {
+          id: crypto.randomUUID(),
+          type: currentType,
+          account, category, amount, date, note
+        };
+        state.transactions.unshift(tx);
+        saveState();
+        el.amountInput.value = '';
+        el.noteInput.value = '';
+        renderAll();
+      });
+
+      // Global search filter
+      el.globalSearch.addEventListener('input', renderTransactions);
+
+      // Settings
+      const openModal = ()=>{ el.settingsModal.classList.add('open'); el.settingsModal.setAttribute('aria-hidden','false'); };
+      const closeModal = ()=>{ el.settingsModal.classList.remove('open'); el.settingsModal.setAttribute('aria-hidden','true'); };
+      el.settingsBtn.addEventListener('click', openModal);
+      el.closeSettingsBtn.addEventListener('click', closeModal);
+      el.settingsModal.addEventListener('click', (e)=>{ if(e.target===el.settingsModal) closeModal(); });
+
+      el.saveSettingsBtn.addEventListener('click', ()=>{
+        state.currency = (el.currencyInput.value || '$').slice(0,4);
+        state.startBalance = parseFloat(el.startBalanceInput.value) || 0;
+        saveState(); renderAll();
+        alert(state.lang==='bn' ? 'সেটিংস সেভ হয়েছে' : 'Settings saved');
+      });
+
+      el.seedDataBtn.addEventListener('click', ()=>{ seedDemoData(); renderAll(); });
+      el.resetDataBtn.addEventListener('click', ()=>{
+        if(confirm(state.lang==='bn' ? 'সব ডাটা রিসেট হবে। নিশ্চিত?' : 'Reset all data?')){
+          state = {...defaultState}; saveState(); init();
+        }
+      });
+
+      // Clear demo data button
+      if(el.clearDemoBtn){
+        el.clearDemoBtn.addEventListener('click', ()=>{
+          if(!confirm(state.lang==='bn' ? 'ডেমো ডাটা মুছে ফেলবেন? এটি স্থায়ী হবে।' : 'Clear seeded demo data? This will remove demo entries and prevent them from being re-seeded.') ) return;
+          clearDemoData();
+        });
+      }
+
+      // Language toggle
+      el.langToggle.addEventListener('click', ()=>{
+        state.lang = state.lang==='en' ? 'bn' : 'en';
+        saveState(); applyLanguage(); renderAll();
+      });
+    }
+
+    function populateAccounts(){
+      el.accountSelect.innerHTML = '';
+      state.accounts.forEach(a=>{
+        const opt = document.createElement('option');
+        opt.value=a; opt.textContent=a; el.accountSelect.appendChild(opt);
+      });
+    }
+    function populateCategories(){
+      el.categorySelect.innerHTML = '';
+      state.categories[currentType].forEach(c=>{
+        const opt = document.createElement('option');
+        opt.value=c; opt.textContent=c; el.categorySelect.appendChild(opt);
+      });
+    }
+
+    function formatAmount(n){ 
+      const sign = n<0 ? '-' : '';
+      const val = Math.abs(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+      return `${sign}${state.currency}${val}`;
+    }
+    function computeTotals(){
+      const inc = state.transactions.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+      const exp = state.transactions.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+      const transfersOut = state.transactions.filter(t=>t.type==='transfer').reduce((s,t)=>s+t.amount,0);
+      const balance = state.startBalance + inc - exp - transfersOut; // simple model
+      return {inc,exp,balance};
+    }
+
+    function renderBalance(){
+      const {inc,exp,balance} = computeTotals();
+      el.balanceValue.textContent = formatAmount(balance);
+      el.incomeValue.textContent = formatAmount(inc);
+      el.expenseValue.textContent = formatAmount(exp);
+    }
+
+    function renderTransactions(){
+      const q = el.globalSearch.value?.toLowerCase() || '';
+      const rows = state.transactions
+        .filter(tx=>{
+          if(!q) return true;
+          return [tx.type,tx.account,tx.category,tx.note,tx.amount,tx.date]
+            .some(v=>String(v).toLowerCase().includes(q));
+        })
+        .slice(0,50);
+
+      el.txBody.innerHTML = '';
+      rows.forEach(tx=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${tx.date}</td>
+          <td><span class="badge ${tx.type}">${labelForType(tx.type)}</span></td>
+          <td>${tx.account}</td>
+          <td>${tx.category}</td>
+          <td>${formatAmount(tx.amount * (tx.type==='expense'||tx.type==='transfer' ? -1 : 1))}</td>
+          <td>${tx.note||''}</td>
+        `;
+        el.txBody.appendChild(tr);
+      });
+    }
+
+    function labelForType(type){
+      const L = t[state.lang];
+      return type==='income' ? L.incomeType : type==='expense' ? L.expenseType : L.transferType;
+    }
+
+    // Chart (simple canvas bars)
+    function renderChart(){
+      const canvas = el.chartCanvas;
+      const dpi = window.devicePixelRatio || 1;
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
+      canvas.width = w * dpi;
+      canvas.height = h * dpi;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpi,dpi);
+
+      // Gather last 7 days aggregates
+      const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      const today = new Date();
+      const buckets = Array.from({length:7}, (_,i)=>{
+        const d = new Date(today); d.setDate(today.getDate()- (6 - i));
+        const key = d.toISOString().slice(0,10);
+        const inc = sumForDate(key,'income');
+        const exp = sumForDate(key,'expense');
+        return {label: days[d.getDay()], inc, exp};
+      });
+
+      // chart area
+      const pad = 20;
+      const innerW = w - pad*2;
+      const innerH = h - pad*2;
+      ctx.clearRect(0,0,w,h);
+
+      // grid
+      ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+      ctx.lineWidth = 1;
+      const gridLines = 4;
+      for(let i=0;i<=gridLines;i++){
+        const y = pad + (innerH/gridLines)*i;
+        ctx.beginPath(); ctx.moveTo(pad,y); ctx.lineTo(w-pad,y); ctx.stroke();
+      }
+
+      // max value
+      const maxVal = Math.max(...buckets.map(b=>Math.max(b.inc,b.exp)), 10);
+      const barGroupW = innerW/7;
+      const barW = Math.max(10, (barGroupW - 18)/2);
+
+      buckets.forEach((b,idx)=>{
+        const gx = pad + idx*barGroupW + 10;
+        // income bar
+        const hInc = (b.inc/maxVal) * (innerH - 24);
+        ctx.fillStyle = '#34d399';
+        roundRect(ctx, gx, h - pad - hInc, barW, hInc, 6, true);
+        // expense bar
+        const hExp = (b.exp/maxVal) * (innerH - 24);
+        ctx.fillStyle = '#ff7b72';
+        roundRect(ctx, gx + barW + 8, h - pad - hExp, barW, hExp, 6, true);
+
+        // label
+        ctx.fillStyle = 'rgba(200,200,217,0.9)';
+        ctx.font = '12px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(b.label, gx + barW, h - 6);
+      });
+    }
+
+    function roundRect(ctx,x,y,w,h,r,fill){
+      ctx.beginPath();
+      ctx.moveTo(x+r,y);
+      ctx.arcTo(x+w,y,x+w,y+h,r);
+      ctx.arcTo(x+w,y+h,x,y+h,r);
+      ctx.arcTo(x,y+h,x,y,r);
+      ctx.arcTo(x,y,x+w,y,r);
+      if(fill) ctx.fill();
+      else ctx.stroke();
+    }
+
+    function sumForDate(date, type){
+      return state.transactions.filter(t=>t.date===date && t.type===type)
+        .reduce((s,t)=>s+t.amount,0);
+    }
+
+    function renderAll(){
+      renderBalance();
+      renderTransactions();
+      renderChart();
+    }
+
+    // Demo seeding
+    function seedDemoData(){
+      const today = new Date();
+      const mkDate = (offset)=>{
+        const d = new Date(today); d.setDate(today.getDate()+offset);
+        return d.toISOString().slice(0,10);
+      };
+      const demo = [
+        {type:'income', account:'Bank', category:'Salary', amount: 850.00, date: mkDate(-6), note:'Monthly'},
+        {type:'expense', account:'Cash', category:'Food', amount: 120.50, date: mkDate(-6), note:'Groceries'},
+        {type:'income', account:'Freelance', category:'Freelance', amount: 220.00, date: mkDate(-5), note:'UI gig'},
+        {type:'expense', account:'Mobile Money', category:'Transport', amount: 40.00, date: mkDate(-5), note:'Ride'},
+        {type:'expense', account:'Bank', category:'Bills', amount: 75.00, date: mkDate(-4), note:'Internet'},
+        {type:'income', account:'Bank', category:'Gift', amount: 50.00, date: mkDate(-3), note:'Friend'},
+        {type:'transfer', account:'Bank', category:'To Savings', amount: 100.00, date: mkDate(-2), note:'Savings'},
+        {type:'expense', account:'Cash', category:'Food', amount: 60.00, date: mkDate(-1), note:'Dinner'},
+        {type:'income', account:'Bank', category:'Salary', amount: 300.00, date: mkDate(0), note:'Bonus'}
+      ];
+      state.transactions = demo.map(d=>({id:crypto.randomUUID(), ...d}));
+      state.startBalance = 500;
+      saveState();
+    }
+
+    function clearDemoData(){
+      // Conservative removal: remove transactions that match seeded demo categories/accounts
+      if(!Array.isArray(state.transactions) || state.transactions.length===0) return;
+      const demoCategories = new Set(['Salary','Food','Freelance','Transport','Bills','Gift','To Savings']);
+      const demoAccounts = new Set(['Bank','Cash','Mobile Money','Freelance']);
+      const remaining = state.transactions.filter(t=> !(demoCategories.has(t.category) && demoAccounts.has(t.account) && typeof t.amount === 'number'));
+      state.transactions = remaining;
+      // If after removal there are no transactions, reset startBalance
+      if(state.transactions.length === 0) state.startBalance = 0;
+      saveState();
+      // persist a flag so we don't auto-seed demo again on this device
+      localStorage.setItem('tp_finance_demo_cleared','true');
+      renderAll();
+      alert('Demo data cleared.');
+    }
+
+    // Keyboard accessibility tweaks
+    document.addEventListener('keydown',(e)=>{
+      if(e.key==='Escape' && el.settingsModal.classList.contains('open')){
+        el.settingsModal.classList.remove('open');
+        el.settingsModal.setAttribute('aria-hidden','true');
+      }
+    });
+  </script>
+</body>
+</html>
